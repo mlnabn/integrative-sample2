@@ -1,20 +1,15 @@
 pipeline {
     agent any
     
-    // Hapus blok tools sepenuhnya. Kita tidak lagi mengandalkan dasbor Jenkins.
-    
     stages {
         stage('Preparation & Injection') {
             steps {
-                // Memberi hak akses pada gradlew
                 sh 'chmod +x gradlew'
                 
-                // Mengunduh OpenJDK 11 murni dari Adoptium, mengekstraknya di workspace, 
-                // dan mendefinisikan lokasi JAVA_HOME secara manual.
                 sh '''
                     if [ ! -d "jdk-11" ]; then
-                        echo "Mengunduh JDK 11..."
-                        wget -qO jdk11.tar.gz https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.23%2B9/OpenJDK11U-jdk_x64_linux_hotspot_11.0.23_9.tar.gz
+                        echo "Mengunduh JDK 11 menggunakan curl..."
+                        curl -sL -o jdk11.tar.gz https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.23%2B9/OpenJDK11U-jdk_x64_linux_hotspot_11.0.23_9.tar.gz
                         tar -xzf jdk11.tar.gz
                         mv jdk-11.0.23+9 jdk-11
                         rm jdk11.tar.gz
@@ -23,7 +18,6 @@ pipeline {
             }
         }
         stage('Parallel Execution') {
-            // Kita menginjeksi variabel JAVA_HOME pada level stage eksekusi
             environment {
                 JAVA_HOME = "${WORKSPACE}/jdk-11"
                 PATH = "${JAVA_HOME}/bin:${PATH}"
@@ -31,7 +25,6 @@ pipeline {
             parallel {
                 stage('Build Stage') {
                     steps {
-                        // Menambahkan flag debug untuk memvalidasi versi Java yang digunakan
                         sh './gradlew --version' 
                         sh './gradlew build'
                     }
