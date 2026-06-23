@@ -1,27 +1,28 @@
 pipeline {
     agent any
     
-    // PERINGATAN ARSITEKTUR: Pastikan Anda telah mengonfigurasi JDK 11 dengan 
-    // variabel 'jdk11' di Manage Jenkins -> Tools seperti pada Latihan 2 laporan Anda.
-    tools {
-        jdk 'jdk11' 
-    }
+    // Blok tools dihapus karena konfigurasi 'jdk11' Anda telah musnah bersama kontainer lama.
+    // Jenkins akan otomatis menggunakan JVM native bawaan kontainer.
     
     stages {
-        stage('Integrative Parallel Execution') {
+        stage('Preparation') {
             steps {
-                // Memberikan izin eksekusi on-the-fly pada lingkungan Linux
+                // Eksekusi izin file dilakukan di stage terpisah agar tidak memblokir paralel
                 sh 'chmod +x gradlew'
-                
-                // Memecah komputasi menjadi dua utas (worker) independen
-                parallel (
-                    "build stage": { 
-                        sh './gradlew build' 
-                    },
-                    "test stage": { 
-                        sh './gradlew test' 
+            }
+        }
+        stage('Parallel Execution') {
+            parallel {
+                stage('Build Stage') {
+                    steps {
+                        sh './gradlew build'
                     }
-                )
+                }
+                stage('Test Stage') {
+                    steps {
+                        sh './gradlew test'
+                    }
+                }
             }
         }
     }
